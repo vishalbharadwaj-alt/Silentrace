@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: s1db
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - 6379:6379
+
+  auth-service:
+    build: ../auth-service
+    env_file: ../auth-service/.env.example
+    ports:
+      - 4001:4001
+    depends_on:
+      - redis
+
+  user-service:
+    build: ../user-service
+    env_file: ../user-service/.env.example
+    ports:
+      - 4002:4002
+    depends_on:
+      - postgres
+
+  decode-service:
+    build: ../decode-service
+    env_file: ../decode-service/.env.example
+    ports:
+      - 8000:8000
+    depends_on:
+      - redis
+      - ai-services
+
+  ai-services:
+    build: ../ai-services
+    env_file: ../ai-services/.env.example
+    ports:
+      - 8100:8100
+
+  notification-service:
+    build: ../notification-service
+    env_file: ../notification-service/.env.example
+    ports:
+      - 4003:4003
+
+volumes:
+  pgdata:
